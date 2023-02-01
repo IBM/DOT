@@ -596,6 +596,9 @@ if solver_params["variant"] == 0:
     dmsft      = (misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,Svar1) - y_vec_tr, y_mask_tr))).value
     dmsft_true = (misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,gk) - y_vec_tr, y_mask_tr))).value
     cost_true  = dmsft_true + (tv_norm*tv_reg).value
+    
+    Phi_m_var  = cp.Parameter(nonneg=True)
+    Phi_m_var.value = mF@np.multiply(Phi_x_var0.value,Svar1.value)
 else:
     dmsft      = (misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr))).value
     dmsft_true = (misfit_norm*cp.sum_squares(cp.multiply(phi_em_est[is_dof_observable] - y_vec_tr, y_mask_tr))).value
@@ -663,7 +666,8 @@ if not solver_params["init_test"]:
         'phant. recon. error': [recon_error_cont],
         'phi_x  recon. error': [phi_x_error_cont],
         'phi_m  recon. error': [phi_m_error_cont],
-        'phi_m0 recon. error': []
+        'phi_m0 recon. error': [],
+        'phantom_diff': []
     }
 
     if solver_params["name"] == "hybrid":
@@ -765,6 +769,7 @@ if not solver_params["init_test"]:
         run_info['phant. recon. error'].append(recon_error_cont)
         run_info['phi_x  recon. error'].append(phi_x_error_cont)
         run_info['phi_m  recon. error'].append(phi_m_error_cont)
+        run_info['phantom_diff'].append(phantom_diff)
 
         if solver_params["name"] == "hybrid":
             run_info['solve 1 time'].append(prob_step1.solver_stats.solve_time)
@@ -795,7 +800,8 @@ if not solver_params["init_test"]:
            + f'   phant. recon. error: {run_info["phant. recon. error"]}\n'
            + f'   phi_x  recon. error: {run_info["phi_x  recon. error"]}\n'
            + f'   phi_m  recon. error: {run_info["phi_m  recon. error"]}\n'
-           + f'   phi_m0 recon. error: {run_info["phi_m0 recon. error"]}\n')
+           + f'   phi_m0 recon. error: {run_info["phi_m0 recon. error"]}\n'
+           + f'   phantom diff. : {run_info["phantom_diff"]}\n')
     
     
     # Optimisation algorithm (step 2) final status summary
