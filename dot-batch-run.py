@@ -59,7 +59,7 @@ solver_params = {
     # so far possible options: 0, 1, 2, 3
     "variant": 3,
     "init_test": False,
-    "max_iter": 20000,
+    "max_iter": 50000,
     "step_diff": 0.01,
     "max_steps": 10,
     
