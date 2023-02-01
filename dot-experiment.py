@@ -597,7 +597,7 @@ if solver_params["variant"] == 0:
     dmsft_true = (misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,gk) - y_vec_tr, y_mask_tr))).value
     cost_true  = dmsft_true + (tv_norm*tv_reg).value
     
-    Phi_m_var  = cp.Parameter(nonneg=True)
+    Phi_m_var  = cp.Parameter(shape=Q.dim(), nonneg=True)
     Phi_m_var.value = mF@np.multiply(Phi_x_var0.value,Svar1.value)
 else:
     dmsft      = (misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr))).value
