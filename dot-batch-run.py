@@ -64,7 +64,7 @@ solver_params = {
     "max_steps": 10,
     
     # type of mask: 0 (no mask), 1 (data driven mask), 2 (ground truth mask)
-    "mask": 2
+    "mask": 0
 }
 
 
@@ -93,59 +93,37 @@ updates = [
     {"name": "born", "opt_method": "MOSEK", "variant": 3, "mask": 2},
     {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 0},
     {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 2}
+    {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 2},
+    
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "mask": 0},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "mask": 0},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "mask": 0},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "mask": 0},
+    
+    {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "mask": 0},
+    {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "mask": 0},
+    {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "mask": 0},
+    {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "mask": 0},
 
+    {"name": "hybrid", "variant": 0, "mask": 0},
     {"name": "hybrid", "variant": 1, "mask": 0},
     {"name": "hybrid", "variant": 2, "mask": 0},
     {"name": "hybrid", "variant": 3, "mask": 0},
-    {"name": "hybrid", "variant": 1, "mask": 1},
-    {"name": "hybrid", "variant": 2, "mask": 1},
-    {"name": "hybrid", "variant": 3, "mask": 1},
-    {"name": "hybrid", "variant": 1, "mask": 2},
-    {"name": "hybrid", "variant": 2, "mask": 2},
-    {"name": "hybrid", "variant": 3, "mask": 2},
-    {"name": "hybrid", "variant": 0, "mask": 0},
-    {"name": "hybrid", "variant": 0, "mask": 1},
-    {"name": "hybrid", "variant": 0, "mask": 2},
     
+    {"name": "born", "variant": 0, "mask": 0},
     {"name": "born", "variant": 1, "mask": 0},
     {"name": "born", "variant": 2, "mask": 0},
     {"name": "born", "variant": 3, "mask": 0},
-    {"name": "born", "variant": 1, "mask": 1},
-    {"name": "born", "variant": 2, "mask": 1},
-    {"name": "born", "variant": 3, "mask": 1},
-    {"name": "born", "variant": 1, "mask": 2},
-    {"name": "born", "variant": 2, "mask": 2},
-    {"name": "born", "variant": 3, "mask": 2},
-    {"name": "born", "variant": 0, "mask": 0},
-    {"name": "born", "variant": 0, "mask": 1},
-    {"name": "born", "variant": 0, "mask": 2}
 
+    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
     {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
     {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
     {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 2},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 2},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 2},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 2},
     
+    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
     {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
     {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 2},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 2},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 2},
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 2}  
+    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0}
 ]
 
 for update in tqdm(updates):
@@ -173,12 +151,13 @@ for update in tqdm(updates):
     try:
         bashCommand = f'python dot-experiment.py {dir_name}'    
         with open(f'{dir_name}/{name}.log', 'w') as output_fh:
-            process = subprocess.check_call(bashCommand.split(), stdout=output_fh)
+            process = subprocess.check_call(bashCommand.split(), stdout=output_fh, stderr=output_fh)
             # process = subprocess.Popen(bashCommand.split(), stdout=output_fh)
     except KeyboardInterrupt:
         print('Interrupted')
         sys.exit(0)
     except subprocess.CalledProcessError as e:
+        print("ERROR: An exception occurred while running an experiment. For details, Check log file in directory "+dir_name)
         print(e.output)
     except:
         print("An exception occurred")

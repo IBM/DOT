@@ -483,7 +483,7 @@ if solver_params["name"] == "hybrid":
         prob_step1.solve(solver_params["opt_method"], verbose = True, max_iter=solver_params['max_iter'], 
                          ignore_dpp = True, eps_abs=5e-8, eps_rel=5e-8)
     elif solver_params["opt_method"] == cp.MOSEK:
-        prob_step1.solve(cp.MOSEK, verbose = True, max_iters=solver_params['max_iter'], ignore_dpp = True, 
+        prob_step1.solve(cp.MOSEK, verbose = True, ignore_dpp = True, 
                    mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
                                  mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
 
@@ -534,18 +534,14 @@ if solver_params["variant"] == 0:
 
 
 # ALGORITHM BORN, variant 2
-# tikh*TVreg <= 0.1, provides 55% error after 1275 iterations
+# cp.sum(Svar1)>=200 - such regularisation is really needed, otherwise we get much worse results
 if solver_params["variant"] == 1:
-    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr))
-          # + tv_norm*tv_reg
-          # + norm_bound*cp.sum(Svar1[is_dof_near_boundary])
-    # cp.sum_squares(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))
+    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+          + tv_norm*tv_reg
     Constraints = [Svar1<=1, 
-                   tv_norm*tv_reg <= 0.01, 
                    cp.sum(Svar1)>=200, 
-                   # Svar1[is_dof_near_boundary]==0,
-                  (S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))==0]
-
+                   Svar1[is_dof_near_boundary]==0,
+                   cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))==0]    
 
 # ALGORITHM BORN, variant 3
 # provides 97% error after 7875 iterations
@@ -597,7 +593,7 @@ if solver_params["variant"] == 0:
     dmsft_true = (misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,gk) - y_vec_tr, y_mask_tr))).value
     cost_true  = dmsft_true + (tv_norm*tv_reg).value
     
-    Phi_m_var  = cp.Parameter(shape=Q.dim(), nonneg=True)
+    Phi_m_var  = cp.Parameter(shape=Q.dim())
     Phi_m_var.value = mF@np.multiply(Phi_x_var0.value,Svar1.value)
 else:
     dmsft      = (misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr))).value
@@ -726,7 +722,9 @@ if not solver_params["init_test"]:
         elif solver_params["opt_method"] == cp.MOSEK:
             prob_step2.solve(cp.MOSEK, ignore_dpp = True, 
                              mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
-                                           mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})        
+                                           mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
+        if solver_params["variant"] == 0:
+            Phi_m_var.value = mF@np.multiply(Phi_x_var0.value, Svar1.value)
         time_lapse2 = time.time() - start_time
 
         # Svar1.value[Svar1.value>=0.5] = 1
