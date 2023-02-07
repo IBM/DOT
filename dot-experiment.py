@@ -576,6 +576,7 @@ elif solver_params["opt_method"] == cp.MOSEK:
                                    mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
 
 time_lapse2 = time.time() - start_time
+logger.info('Initial iteration. Step 2 is finished.')
 
 
 # Optimisation algorithm (step 2) status summary
