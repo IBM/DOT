@@ -4,7 +4,10 @@ import json
 from datetime import datetime
 import subprocess
 from tqdm import tqdm
+import time
 
+
+parallel = True
     
 problem = {
     # paralelepiped enclosing the phantom 
@@ -126,6 +129,8 @@ updates = [
     {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0}
 ]
 
+procs = []
+
 for update in tqdm(updates):
     params = solver_params.copy()
     for key in update:
@@ -151,8 +156,12 @@ for update in tqdm(updates):
     try:
         bashCommand = f'python dot-experiment.py {dir_name}'    
         with open(f'{dir_name}/{name}.log', 'w') as output_fh:
-            process = subprocess.check_call(bashCommand.split(), stdout=output_fh, stderr=output_fh)
-            # process = subprocess.Popen(bashCommand.split(), stdout=output_fh)
+            if parallel:
+                p = subprocess.Popen(bashCommand.split(), stdout=output_fh, stderr=output_fh)
+                procs.append(p)
+            else:
+                process = subprocess.check_call(bashCommand.split(), stdout=output_fh, stderr=output_fh)
+                # process = subprocess.run(bashCommand.split(), stdout=output_fh, stderr=output_fh)                            
     except KeyboardInterrupt:
         print('Interrupted')
         sys.exit(0)
@@ -160,7 +169,20 @@ for update in tqdm(updates):
         print("ERROR: An exception occurred while running an experiment. For details, Check log file in directory "+dir_name)
         print(e.output)
     except:
-        print("An exception occurred")
+        print("An unknown exception occurred")
         # print(CalledProcessError.output)
 
-        
+if parallel:
+    cont = True
+    while cont:
+        finished = 0
+        for p in procs:            
+            if p.poll() is not None:
+                finished = finished + 1
+        if finished == len(procs):
+            cont = False
+            print(f'Finished {finished} experiments out of {len(procs)}.')
+            print('All experiments finished.')
+        else:
+            print(f'Finished {finished} experiments out of {len(procs)}.')
+            time.sleep(15)

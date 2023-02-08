@@ -699,7 +699,7 @@ if not solver_params["init_test"]:
                                  warm_start=False, verbose = False, 
                                  eps_abs=5e-8, eps_rel=5e-8)
             elif solver_params["opt_method"] == cp.MOSEK:
-                prob_step1.solve(cp.MOSEK, max_iters=solver_params['max_iter'], ignore_dpp = True, 
+                prob_step1.solve(cp.MOSEK, ignore_dpp = True,
                            mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
                                          mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
 
