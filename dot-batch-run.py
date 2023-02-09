@@ -72,41 +72,15 @@ solver_params = {
 
 
 updates = [
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "mask": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "mask": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "mask": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "mask": 2},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "mask": 2},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "mask": 2},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "mask": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "mask": 2},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
     
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "mask": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "mask": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "mask": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "mask": 2},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "mask": 2},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "mask": 2},
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "mask": 2},
-    
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "mask": 0},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "mask": 0},
-    
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "mask": 0},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0},
 
     {"name": "hybrid", "variant": 0, "mask": 0},
     {"name": "hybrid", "variant": 1, "mask": 0},
@@ -116,17 +90,7 @@ updates = [
     {"name": "born", "variant": 0, "mask": 0},
     {"name": "born", "variant": 1, "mask": 0},
     {"name": "born", "variant": 2, "mask": 0},
-    {"name": "born", "variant": 3, "mask": 0},
-
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
-    
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0}
+    {"name": "born", "variant": 3, "mask": 0}
 ]
 
 procs = []
@@ -185,4 +149,4 @@ if parallel:
             print('All experiments finished.')
         else:
             print(f'Finished {finished} experiments out of {len(procs)}.')
-            time.sleep(15)
+            time.sleep(30)

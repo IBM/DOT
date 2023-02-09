@@ -479,9 +479,15 @@ if solver_params["name"] == "hybrid":
           + cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0)))
 
     prob_step1 = cp.Problem(cp.Minimize(Cost1))
-    if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.SCS or solver_params["opt_method"] == cp.ECOS:
-        prob_step1.solve(solver_params["opt_method"], verbose = True, max_iter=solver_params['max_iter'], 
+    if solver_params["opt_method"] == cp.OSQP:
+        prob_step1.solve(cp.OSQP, verbose = True, max_iter=solver_params['max_iter'], 
                          ignore_dpp = True, eps_abs=5e-8, eps_rel=5e-8)
+    elif solver_params["opt_method"] == cp.SCS:
+        prob_step1.solve(cp.SCS, verbose = True, max_iters=solver_params['max_iter'], 
+                         ignore_dpp = True, eps_abs=5e-8, eps_rel=5e-8)
+    elif solver_params["opt_method"] == cp.ECOS:
+        prob_step1.solve(cp.ECOS, verbose = True, max_iters=solver_params['max_iter'], 
+                         ignore_dpp = True)
     elif solver_params["opt_method"] == cp.MOSEK:
         prob_step1.solve(cp.MOSEK, verbose = True, ignore_dpp = True, 
                    mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
@@ -567,9 +573,14 @@ if solver_params["variant"] == 3:
                    Svar1[is_dof_near_boundary]==0]
 
 prob_step2 = cp.Problem(cp.Minimize(Cost2), Constraints)
-if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.SCS or solver_params["opt_method"] == cp.ECOS:
-    prob_step2.solve(solver_params["opt_method"], verbose = True, max_iter=solver_params['max_iter'], ignore_dpp = True,
+if solver_params["opt_method"] == cp.OSQP:
+    prob_step2.solve(cp.OSQP, verbose = True, max_iter=solver_params['max_iter'], ignore_dpp = True,
                      eps_abs=5e-8, eps_rel=5e-8)
+elif solver_params["opt_method"] == cp.SCS:
+    prob_step2.solve(cp.SCS, verbose = True, max_iters=solver_params['max_iter'], ignore_dpp = True,
+                     eps_abs=5e-8, eps_rel=5e-8)
+elif solver_params["opt_method"] == cp.ECOS:
+    prob_step2.solve(cp.ECOS, verbose = True, max_iters=solver_params['max_iter'], ignore_dpp = True)
 elif solver_params["opt_method"] == cp.MOSEK:
     prob_step2.solve(cp.MOSEK, verbose = True, ignore_dpp = True, 
                      mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
@@ -716,10 +727,17 @@ if not solver_params["init_test"]:
 
         # Step 2:
         start_time = time.time()
-        if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.SCS or solver_params["opt_method"] == cp.ECOS:
-            prob_step2.solve(solver_params["opt_method"], max_iter=solver_params['max_iter'], ignore_dpp = True, 
+        if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.ECOS:
+            prob_step2.solve(cp.OSQP, max_iter=solver_params['max_iter'], ignore_dpp = True, 
                              warm_start=False, verbose = False,
                              eps_abs=5e-8, eps_rel=5e-8)
+        elif solver_params["opt_method"] == cp.SCS:
+            prob_step2.solve(solver_params["opt_method"], max_iters=solver_params['max_iter'], ignore_dpp = True, 
+                             warm_start=False, verbose = False,
+                             eps_abs=5e-8, eps_rel=5e-8)
+        elif solver_params["opt_method"] == cp.ECOS:
+            prob_step2.solve(cp.ECOS, max_iters=solver_params['max_iter'], ignore_dpp = True, 
+                             warm_start=False, verbose = False)            
         elif solver_params["opt_method"] == cp.MOSEK:
             prob_step2.solve(cp.MOSEK, ignore_dpp = True, 
                              mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
@@ -794,6 +812,8 @@ if not solver_params["init_test"]:
            + f'   step 1 time   : {run_info["step 1 time"]}\n'
            + f'   step 2 time   : {run_info["step 2 time"]}\n'
            + f'   total times   : {run_info["total time"]}\n'
+           + f'   total execution time   : {sum(run_info["total time"])}\n'
+           + f'   execution time per iter: {sum(run_info["total time"])/itr}\n'                
            + f'   number 1 iters: {run_info["number 1 iters"]}\n'
            + f'   number 2 iters: {run_info["number 2 iters"]}\n'
            + f'   phant. recon. error: {run_info["phant. recon. error"]}\n'
