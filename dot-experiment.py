@@ -39,8 +39,8 @@ with open(results_dir+'/solver_params.json', 'r') as fp:
     solver_params = json.load(fp)
 
 # logging into terminal
-name = solver_params['name']+str(solver_params['variant'])+'_'+solver_params['opt_method']+\
-    '_mask'+str(solver_params['mask'])+'_'+solver_params['observed_faces']
+name = solver_params['name']+str(solver_params['variant'])+'_lmd_'+str(solver_params['lmd1'])+'_'+str(solver_params['lmd2'])+\
+    '_'+solver_params['opt_method']+'_'+solver_params['observed_faces']
 basefilename = os.path.join(solver_params['results_folder'], name)
 
 logging.basicConfig(stream=sys.stdout, format='%(asctime)s %(levelname)8s:    %(message)s', level=logging.INFO)
@@ -475,16 +475,16 @@ if solver_params["name"] == "hybrid":
     misfit_norm.value = 1/np.linalg.norm(y_vec_tr*y_mask_tr,2)**2
 
     Cost1 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var0[is_dof_observable] - y_vec_tr, y_mask_tr)) \
-          + cp.sum_squares(S_excit_nm@Phi_x_var+mM@(cp.multiply(Phi_x_var, Svar0))/float(Gm)-f_excit) \
-          + cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0)))
+          + solver_params['lmd1']*cp.sum_squares(S_excit_nm@Phi_x_var+mM@(cp.multiply(Phi_x_var, Svar0))/float(Gm)-f_excit) \
+          + solver_params['lmd2']*cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0)))
 
     prob_step1 = cp.Problem(cp.Minimize(Cost1))
     if solver_params["opt_method"] == cp.OSQP:
         prob_step1.solve(cp.OSQP, verbose = True, max_iter=solver_params['max_iter'], 
-                         ignore_dpp = True, eps_abs=5e-8, eps_rel=5e-8)
+                         ignore_dpp = True, eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
     elif solver_params["opt_method"] == cp.SCS:
         prob_step1.solve(cp.SCS, verbose = True, max_iters=solver_params['max_iter'], 
-                         ignore_dpp = True, eps_abs=5e-8, eps_rel=5e-8)
+                         ignore_dpp = True, eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
     elif solver_params["opt_method"] == cp.ECOS:
         prob_step1.solve(cp.ECOS, verbose = True, max_iters=solver_params['max_iter'], 
                          ignore_dpp = True)
@@ -499,6 +499,9 @@ if solver_params["name"] == "hybrid":
     phi_m0_error_disc = np.linalg.norm(hatphi_m.vector()[:]-Phi_m_var0.value)/np.linalg.norm(hatphi_m.vector()[:])
 
     logger.info('   Initial iteration info (after step 1):\n'
+        +f'   misfit    : {misfit_norm.value*cp.sum_squares(cp.multiply(Phi_m_var0[is_dof_observable] - y_vec_tr, y_mask_tr)).value}\n'
+        +f'   excitation: {solver_params["lmd1"]*cp.sum_squares(S_excit_nm@Phi_x_var+mM@(cp.multiply(Phi_x_var, Svar0))/float(Gm)-f_excit).value}\n'
+        +f'   emission  : {solver_params["lmd2"]*cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0))).value}\n'
         +f'   number iters: {prob_step1.solver_stats.num_iters}\n'
         +f'   solve 1 time: {prob_step1.solver_stats.solve_time}\n'
         +f'   phi_m   reconstruction error:  continuous: {phi_m0_error_cont};  discrete: {phi_m0_error_disc}\n')
@@ -575,10 +578,10 @@ if solver_params["variant"] == 3:
 prob_step2 = cp.Problem(cp.Minimize(Cost2), Constraints)
 if solver_params["opt_method"] == cp.OSQP:
     prob_step2.solve(cp.OSQP, verbose = True, max_iter=solver_params['max_iter'], ignore_dpp = True,
-                     eps_abs=5e-8, eps_rel=5e-8)
+                     eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
 elif solver_params["opt_method"] == cp.SCS:
     prob_step2.solve(cp.SCS, verbose = True, max_iters=solver_params['max_iter'], ignore_dpp = True,
-                     eps_abs=5e-8, eps_rel=5e-8)
+                     eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
 elif solver_params["opt_method"] == cp.ECOS:
     prob_step2.solve(cp.ECOS, verbose = True, max_iters=solver_params['max_iter'], ignore_dpp = True)
 elif solver_params["opt_method"] == cp.MOSEK:
@@ -619,14 +622,19 @@ else:
         cost_true = dmsft_true + (tv_norm*tv_reg).value
 
 sol1 = fem.Function(Q)
-sol1.vector()[:] = Svar1.value        
+sol1.vector()[:] = Svar1.value
 recon_error = np.sqrt(fem.assemble((XiPhantom-sol1)**2*fem.dx)/fem.assemble((XiPhantom)**2*fem.dx))
+l2_adj_error = l2_adj_metric(Svar1.value, XiPhantom.vector()[:], Q)
+dice = dice_metric(Svar1.value, XiPhantom.vector()[:])
+
 message = '   Initial iteration summary:\n' +\
         f'   Reconstruction error = {recon_error}\n' +\
+        f'   adjusted recon error = {l2_adj_error}\n' +\
+        f'   dice = {dice}\n' +\
         f'   Data misfit = {dmsft}   TV = {(tv_norm*tv_reg).value}\n' +\
         f'   True misfit = {dmsft_true}   TV = {(tv_norm*tv_gk).value}\n' +\
         f'   Cost = {Cost2.value}   True cost = {dmsft_true + (tv_norm*tv_reg).value}\n' +\
-        f'   Non-zero component = {(Svar1.value>0.1).sum()}   True non-zero component = {(gk.value>0.1).sum()}'
+        f'   Non-zero component = {(Svar1.value>0.1).sum()}   True non-zero component = {(gk.value>0.1).sum()}\n'
 if solver_params["variant"] != 0:
     message = message + f'\n   Emission equation constraint = {cp.sum_squares(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))).value}'
 
@@ -675,7 +683,11 @@ if not solver_params["init_test"]:
         'phi_x  recon. error': [phi_x_error_cont],
         'phi_m  recon. error': [phi_m_error_cont],
         'phi_m0 recon. error': [],
-        'phantom_diff': []
+        'phantom_diff': [],
+        'adjusted l2 with true': [l2_adj_error],
+        'adjusted l2 with prev': [],    
+        'dice with true': [dice],
+        'dice with prev': []
     }
 
     if solver_params["name"] == "hybrid":
@@ -687,17 +699,20 @@ if not solver_params["init_test"]:
     phi_x_prev = Phi_x_var0.value.copy()
     phi_m_prev = Phi_m_var.value.copy()
 
+    np.save(basefilename+f'_phantom_{0}', Svar1.value)
+    np.save(basefilename+f'_phi_x_est_{0}', Phi_x_var0.value)
+    np.save(basefilename+f'_phi_m_est_{0}', Phi_m_var.value)
+
     phantom_diff = 1
-    max_iter = 10
     itr = 1
 
     while (phantom_diff > solver_params["step_diff"]) and (itr <= solver_params["max_steps"]):
         logger.info(f'====================== iteration: {itr} starting')
         start_time = time.time()
 
+        mu_axf.vector()[:] = ICG_absoption_coeff*Svar1.value
         # Step 1:
         if solver_params["name"] == "born":
-            mu_axf.vector()[:] = ICG_absoption_coeff*Svar1.value
             phi_x_est = fem.Function(Q)
             fem.solve(ax_muax==rhs, phi_x_est, solver_parameters={'linear_solver': solver_params['linear_solver']})
             project_to_nonnegative(phi_x_est)
@@ -705,12 +720,25 @@ if not solver_params["init_test"]:
 
         if solver_params["name"] == "hybrid":
             Svar0.value = Svar1.value
-            if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.SCS or solver_params["opt_method"] == cp.ECOS:
-                prob_step1.solve(solver_params["opt_method"], max_iter=solver_params['max_iter'], ignore_dpp = True, 
-                                 warm_start=False, verbose = False, 
-                                 eps_abs=5e-8, eps_rel=5e-8)
+
+            # need to update S_excit_nm after each update of chi (Svar)
+            S_excit_nm = fem.assemble(ax_nomuaxf_form(ux, vx)).array()
+            Cost1 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var0[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+                  + solver_params['lmd1']*cp.sum_squares(S_excit_nm@Phi_x_var+mM@(cp.multiply(Phi_x_var, Svar0))/float(Gm)-f_excit) \
+                  + solver_params['lmd2']*cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0)))
+            prob_step1 = cp.Problem(cp.Minimize(Cost1))
+
+            if solver_params["opt_method"] == cp.OSQP:
+                prob_step1.solve(cp.OSQP, verbose = False, max_iter=solver_params['max_iter'], 
+                                 ignore_dpp = True, eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
+            elif solver_params["opt_method"] == cp.SCS:
+                prob_step1.solve(cp.SCS, verbose = False, max_iters=solver_params['max_iter'], 
+                                 ignore_dpp = True, eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
+            elif solver_params["opt_method"] == cp.ECOS:
+                prob_step1.solve(cp.ECOS, verbose = False, max_iters=solver_params['max_iter'], 
+                                 ignore_dpp = True)
             elif solver_params["opt_method"] == cp.MOSEK:
-                prob_step1.solve(cp.MOSEK, ignore_dpp = True,
+                prob_step1.solve(cp.MOSEK, ignore_dpp = True, 
                            mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
                                          mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
 
@@ -720,6 +748,9 @@ if not solver_params["init_test"]:
             phi_m0_error_cont = np.sqrt(fem.assemble((hatphi_m-temp_f)**2*fem.dx)/fem.assemble((hatphi_m)**2*fem.dx))
             phi_m0_error_disc = np.linalg.norm(hatphi_m.vector()[:]-Phi_m_var0.value)/np.linalg.norm(hatphi_m.vector()[:])        
             logger.info('after step 1:\n'
+                +f'   misfit    : {misfit_norm.value*cp.sum_squares(cp.multiply(Phi_m_var0[is_dof_observable] - y_vec_tr, y_mask_tr)).value}\n'
+                +f'   excitation: {solver_params["lmd1"]*cp.sum_squares(S_excit_nm@Phi_x_var+mM@(cp.multiply(Phi_x_var, Svar0))/float(Gm)-f_excit).value}\n'
+                +f'   emission  : {solver_params["lmd2"]*cp.sum_squares(S_emit@Phi_m_var0-mM@(cp.multiply(Phi_x_var, Svar0))).value}\n'
                 +f'   number iters: {prob_step1.solver_stats.num_iters}\n'
                 +f'   solve 1 time: {prob_step2.solver_stats.solve_time}\n'
                 +f'   phi_m   reconstruction error:  continuous: {phi_m0_error_cont};  discrete: {phi_m0_error_disc}\n')
@@ -730,18 +761,18 @@ if not solver_params["init_test"]:
         if solver_params["opt_method"] == cp.OSQP or solver_params["opt_method"] == cp.ECOS:
             prob_step2.solve(cp.OSQP, max_iter=solver_params['max_iter'], ignore_dpp = True, 
                              warm_start=False, verbose = False,
-                             eps_abs=5e-8, eps_rel=5e-8)
+                             eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
         elif solver_params["opt_method"] == cp.SCS:
             prob_step2.solve(solver_params["opt_method"], max_iters=solver_params['max_iter'], ignore_dpp = True, 
                              warm_start=False, verbose = False,
-                             eps_abs=5e-8, eps_rel=5e-8)
+                             eps_abs=solver_params["eps_abs"], eps_rel=solver_params["eps_rel"])
         elif solver_params["opt_method"] == cp.ECOS:
-            prob_step2.solve(cp.ECOS, max_iters=solver_params['max_iter'], ignore_dpp = True, 
-                             warm_start=False, verbose = False)            
+            prob_step2.solve(cp.ECOS, max_iters=solver_params['max_iter'], ignore_dpp = True,
+                             warm_start=False, verbose = False)
         elif solver_params["opt_method"] == cp.MOSEK:
             prob_step2.solve(cp.MOSEK, ignore_dpp = True, 
                              mosek_params={mosek.iparam.intpnt_solve_form: mosek.solveform.free, 
-                                           mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})
+                                           mosek.dparam.intpnt_co_tol_pfeas: 1e-8, mosek.dparam.intpnt_co_tol_infeas: 1e-12})        
         if solver_params["variant"] == 0:
             Phi_m_var.value = mF@np.multiply(Phi_x_var0.value, Svar1.value)
         time_lapse2 = time.time() - start_time
@@ -765,6 +796,12 @@ if not solver_params["init_test"]:
         phi_x_diff   = np.linalg.norm(phi_x_prev - Phi_x_var0.value)/np.linalg.norm(phi_x_prev)
         phi_m_diff   = np.linalg.norm(phi_m_prev - Phi_m_var.value)/np.linalg.norm(phi_m_prev)
 
+        dice = dice_metric(Svar1.value, XiPhantom.vector()[:])
+        dice_diff = dice_metric(Svar1.value, XiPhantom_est_prev)
+
+        l2_adj_error = l2_adj_metric(Svar1.value, XiPhantom.vector()[:], Q)
+        l2_adj_diff  = l2_adj_metric(Svar1.value, XiPhantom_est_prev, Q)
+
         logger.info('   iteration info after step 2:\n'
                    +f'   number 2 iters: {prob_step2.solver_stats.num_iters}\n'
                    +f'   solve 2 time: {prob_step2.solver_stats.solve_time}\n'
@@ -776,7 +813,11 @@ if not solver_params["init_test"]:
                    +f'   phi_m   reconstruction error:  continuous: {phi_m_error_cont};  discrete: {phi_m_error_disc}\n'                
                    +f'   per iteration phantom difference:  {phantom_diff}\n'
                    +f'   per iteration  phi_x  difference: {phi_x_diff}\n'
-                   +f'   per iteration  phi_m  difference: {phi_m_diff}\n')
+                   +f'   per iteration  phi_m  difference: {phi_m_diff}\n'
+                   +f'   adjusted l2 with true: {l2_adj_error}\n'
+                   +f'   adjusted l2 with prev: {l2_adj_diff}\n'
+                   +f'   dice with true: {dice}\n'
+                   +f'   dice with prev: {dice_diff}\n')
 
         run_info['solve 2 time'].append(prob_step2.solver_stats.solve_time)
         run_info['number 2 iters'].append(prob_step2.solver_stats.num_iters)
@@ -787,15 +828,19 @@ if not solver_params["init_test"]:
         run_info['phi_x  recon. error'].append(phi_x_error_cont)
         run_info['phi_m  recon. error'].append(phi_m_error_cont)
         run_info['phantom_diff'].append(phantom_diff)
+        run_info['adjusted l2 with true'].append(l2_adj_error)
+        run_info['adjusted l2 with prev'].append(l2_adj_diff)
+        run_info['dice with true'].append(dice)
+        run_info['dice with prev'].append(dice_diff)
 
         if solver_params["name"] == "hybrid":
             run_info['solve 1 time'].append(prob_step1.solver_stats.solve_time)
             run_info['number 1 iters'].append(prob_step1.solver_stats.num_iters)
             run_info['phi_m0 recon. error'].append(phi_m0_error_cont)
 
-        np.save(basefilename+'_phantom', Svar1.value)
-        np.save(basefilename+'_phi_x_est', Phi_x_var0.value)
-        np.save(basefilename+'_phi_m_est', Phi_m_var.value)
+        np.save(basefilename+f'_phantom_{itr}', Svar1.value)
+        np.save(basefilename+f'_phi_x_est_{itr}', Phi_x_var0.value)
+        np.save(basefilename+f'_phi_m_est_{itr}', Phi_m_var.value)
 
         XiPhantom_est_prev = Svar1.value.copy()
         phi_x_prev = Phi_x_var0.value.copy()
@@ -805,22 +850,27 @@ if not solver_params["init_test"]:
 
     logger.info('Iterative algorithm has finished')
 
+
     logger.info('Iterations summary:\n'
-           + f'   solver iters  : {itr}\n'
-           + f'   solve 1 times : {run_info["solve 1 time"]}\n'
-           + f'   solve 2 times : {run_info["solve 2 time"]}\n'
-           + f'   step 1 time   : {run_info["step 1 time"]}\n'
-           + f'   step 2 time   : {run_info["step 2 time"]}\n'
-           + f'   total times   : {run_info["total time"]}\n'
-           + f'   total execution time   : {sum(run_info["total time"])}\n'
-           + f'   execution time per iter: {sum(run_info["total time"])/itr}\n'                
-           + f'   number 1 iters: {run_info["number 1 iters"]}\n'
-           + f'   number 2 iters: {run_info["number 2 iters"]}\n'
-           + f'   phant. recon. error: {run_info["phant. recon. error"]}\n'
-           + f'   phi_x  recon. error: {run_info["phi_x  recon. error"]}\n'
-           + f'   phi_m  recon. error: {run_info["phi_m  recon. error"]}\n'
-           + f'   phi_m0 recon. error: {run_info["phi_m0 recon. error"]}\n'
-           + f'   phantom diff. : {run_info["phantom_diff"]}\n')
+               + f'   solver iters  : {itr}\n'
+               + f'   solve 1 times : {run_info["solve 1 time"]}\n'
+               + f'   solve 2 times : {run_info["solve 2 time"]}\n'
+               + f'   step 1 time   : {run_info["step 1 time"]}\n'
+               + f'   step 2 time   : {run_info["step 2 time"]}\n'
+               + f'   total times   : {run_info["total time"]}\n'
+               + f'   total execution time   : {sum(run_info["total time"])}\n'
+               + f'   execution time per iter: {sum(run_info["total time"])/itr}\n'
+               + f'   number 1 iters: {run_info["number 1 iters"]}\n'
+               + f'   number 2 iters: {run_info["number 2 iters"]}\n'
+               + f'   phant. recon. error: {run_info["phant. recon. error"]}\n'
+               + f'   phi_x  recon. error: {run_info["phi_x  recon. error"]}\n'
+               + f'   phi_m  recon. error: {run_info["phi_m  recon. error"]}\n'
+               + f'   phi_m0 recon. error: {run_info["phi_m0 recon. error"]}\n'
+               + f'   phantom diff. : {run_info["phantom_diff"]}\n'
+               + f'   adjusted l2 with true: {run_info["adjusted l2 with true"]}\n'
+               + f'   adjusted l2 with prev: {run_info["adjusted l2 with prev"]}\n'
+               + f'   dice with true : {run_info["dice with true"]}\n'
+               + f'   dice with prev : {run_info["dice with prev"]}\n')
     
     
     # Optimisation algorithm (step 2) final status summary

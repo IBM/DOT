@@ -35,7 +35,7 @@ problem = {
     "measurements_side_file": '/RB3mmSide7uM'
 }
 
-solver_params = {
+solver_params_default = {
     "name": "born",
     "results_folder": "results",
 
@@ -60,11 +60,16 @@ solver_params = {
     # OSQP, SCS, ECOS, MOSEK
     "opt_method": "OSQP",
     # so far possible options: 0, 1, 2, 3
-    "variant": 3,
+    "variant": 1,
     "init_test": False,
-    "max_iter": 50000,
+    "max_iter": 20000,
     "step_diff": 0.01,
     "max_steps": 10,
+    "lmd1": 1,
+    "lmd2": 1,
+
+    "eps_abs": 5e-8, 
+    "eps_rel": 5e-8,
     
     # type of mask: 0 (no mask), 1 (data driven mask), 2 (ground truth mask)
     "mask": 0
@@ -72,48 +77,74 @@ solver_params = {
 
 
 updates = [
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
-    
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0},
+    # {"name": "born", "variant": 0},
+    # {"name": "born", "variant": 1},
+    # {"name": "born", "variant": 2},
+    # {"name": "born", "variant": 3}
 
-    {"name": "hybrid", "variant": 0, "mask": 0},
-    {"name": "hybrid", "variant": 1, "mask": 0},
-    {"name": "hybrid", "variant": 2, "mask": 0},
-    {"name": "hybrid", "variant": 3, "mask": 0},
+    {"name": "born", "variant": 2}
     
-    {"name": "born", "variant": 0, "mask": 0},
-    {"name": "born", "variant": 1, "mask": 0},
-    {"name": "born", "variant": 2, "mask": 0},
-    {"name": "born", "variant": 3, "mask": 0}
+    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.01},
+    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.1},
+    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 10},
+    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 100}
+
+    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 0.01},
+    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 0.1},
+    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 10},
+    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 100}
+
+    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 0.01},
+    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 0.1},
+    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 10},
+    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 100}
+    
+    # {"name": "hybrid", "variant": 1, "lmd1": 10},
+    # {"name": "hybrid", "variant": 1, "lmd1": 100}
+    
+#     {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
+#     {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
+#     {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
+#     {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
+    
+#     {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
+#     {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
+#     {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
+#     {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0},
+
+#     {"name": "hybrid", "variant": 0, "mask": 0},
+#     {"name": "hybrid", "variant": 1, "mask": 0},
+#     {"name": "hybrid", "variant": 2, "mask": 0},
+#     {"name": "hybrid", "variant": 3, "mask": 0},
+    
+#     {"name": "born", "variant": 0, "mask": 0},
+#     {"name": "born", "variant": 1, "mask": 0},
+#     {"name": "born", "variant": 2, "mask": 0},
+#     {"name": "born", "variant": 3, "mask": 0}
 ]
 
 procs = []
 
 for update in tqdm(updates):
-    params = solver_params.copy()
+    solver_params = solver_params_default.copy()
     for key in update:
-        params[key]=update[key]
+        solver_params[key]=update[key]
         
     # create output directory and save basic config
     time_stamp = datetime.now().strftime('%b_%d_%H')
-    name = params['name']+str(params['variant'])+'_'+params['opt_method']+\
-           '_mask'+str(params['mask'])+'_'+params['observed_faces']
+    # '_lmd_'+str(solver_params['lmd1'])+'_'+str(solver_params['lmd2'])+\
+    name = solver_params['name']+str(solver_params['variant'])+\
+        '_'+solver_params['opt_method']+'_'+solver_params['observed_faces']    
     dir_name = name+'_'+time_stamp
-    
-    params["results_folder"] = dir_name
+
+    solver_params["results_folder"] = dir_name
     if not os.path.exists(dir_name):
         os.makedirs(dir_name)
 
     with open(dir_name+'/problem.json', 'w') as fp:
         json.dump(problem, fp)
     with open(dir_name+'/solver_params.json', 'w') as fp:
-        json.dump(params, fp)
+        json.dump(solver_params, fp)
         
     
     # run optimisation in a subprocess

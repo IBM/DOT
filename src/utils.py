@@ -147,4 +147,30 @@ def project_to_nonnegative(ff):
     tmp[tmp<0] = 0
     ff.vector()[:] = tmp
     
+def dice_metric(chi1, chi2):
+    chi_n1 = chi1.copy()
+    chi_n1[chi_n1>=0.5] = 1
+    chi_n1[chi_n1<0.5] = 0
+
+    chi_n2 = chi2.copy()
+    chi_n2[chi_n2>=0.5] = 1
+    chi_n2[chi_n2<0.5] = 0
     
+    dice = 2*(chi_n1*chi_n2).sum()/(chi_n1.sum()+chi_n2.sum())
+    return dice
+    
+def l2_adj_metric(chi1, chi2, Q):
+    chi_n1 = fem.Function(Q)
+    chi_temp = chi1.copy()
+    chi_temp[chi_temp>=0.5] = 1
+    chi_temp[chi_temp<0.5] = 0
+    chi_n1.vector()[:] = chi_temp
+    
+    chi_n2 = fem.Function(Q)
+    chi_temp = chi2.copy()    
+    chi_temp[chi_temp>=0.5] = 1
+    chi_temp[chi_temp<0.5] = 0
+    chi_n2.vector()[:] = chi_temp
+
+    recon_error = np.sqrt(fem.assemble((chi_n1-chi_n2)**2*fem.dx)/fem.assemble((chi_n2)**2*fem.dx))
+    return recon_error
