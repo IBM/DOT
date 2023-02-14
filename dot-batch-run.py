@@ -77,12 +77,22 @@ solver_params_default = {
 
 
 updates = [
+    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
+    
+    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0}
+    
     # {"name": "born", "variant": 0},
     # {"name": "born", "variant": 1},
     # {"name": "born", "variant": 2},
     # {"name": "born", "variant": 3}
 
-    {"name": "born", "variant": 2}
+    # {"name": "born", "variant": 2}
     
     # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.01},
     # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.1},
@@ -102,16 +112,6 @@ updates = [
     # {"name": "hybrid", "variant": 1, "lmd1": 10},
     # {"name": "hybrid", "variant": 1, "lmd1": 100}
     
-#     {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
-#     {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
-#     {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
-#     {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
-    
-#     {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
-#     {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
-#     {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
-#     {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0},
-
 #     {"name": "hybrid", "variant": 0, "mask": 0},
 #     {"name": "hybrid", "variant": 1, "mask": 0},
 #     {"name": "hybrid", "variant": 2, "mask": 0},
