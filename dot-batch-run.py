@@ -67,6 +67,7 @@ solver_params_default = {
     "max_steps": 10,
     "lmd1": 1,
     "lmd2": 1,
+    "norm_p": 2,
 
     "eps_abs": 5e-8, 
     "eps_rel": 5e-8,
@@ -77,15 +78,38 @@ solver_params_default = {
 
 
 updates = [
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "mask": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 0},
+    {"name": "born", "opt_method": "SCS", "variant": 1},
+    {"name": "born", "opt_method": "SCS", "variant": 2},
+    {"name": "born", "opt_method": "SCS", "variant": 3},
+
+    {"name": "hybrid", "opt_method": "SCS", "variant": 0},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 1},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 2},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 3},
+
+    {"name": "born", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
+
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
     
-    {"name": "born", "opt_method": "SCS", "variant": 0, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "mask": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "mask": 0}
+    {"name": "born", "opt_method": "SCS", "variant": 0, "norm_p": 1},
+    {"name": "born", "opt_method": "SCS", "variant": 1, "norm_p": 1},
+    {"name": "born", "opt_method": "SCS", "variant": 2, "norm_p": 1},
+    {"name": "born", "opt_method": "SCS", "variant": 3, "norm_p": 1},
+
+    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "norm_p": 1},
+    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "norm_p": 1}
+    
+    
+    # {"name": "born", "opt_method": "SCS", "variant": 3, "norm_p": 1}
     
     # {"name": "born", "variant": 0},
     # {"name": "born", "variant": 1},
@@ -133,7 +157,10 @@ for update in tqdm(updates):
     # create output directory and save basic config
     time_stamp = datetime.now().strftime('%b_%d_%H')
     # '_lmd_'+str(solver_params['lmd1'])+'_'+str(solver_params['lmd2'])+\
-    name = solver_params['name']+str(solver_params['variant'])+\
+    # name = solver_params['name']+str(solver_params['variant'])+\
+    #     '_'+solver_params['opt_method']+'_'+solver_params['observed_faces']
+    name = solver_params['name']+'_p'+str(solver_params['norm_p'])+\
+        '_v'+str(solver_params['variant'])+\
         '_'+solver_params['opt_method']+'_'+solver_params['observed_faces']    
     dir_name = name+'_'+time_stamp
 

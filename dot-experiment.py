@@ -39,7 +39,7 @@ with open(results_dir+'/solver_params.json', 'r') as fp:
     solver_params = json.load(fp)
 
 # logging into terminal
-name = solver_params['name']+str(solver_params['variant'])+'_lmd_'+str(solver_params['lmd1'])+'_'+str(solver_params['lmd2'])+\
+name = solver_params['name']+'_p'+str(solver_params['norm_p'])+'_v'+str(solver_params['variant'])+\
     '_'+solver_params['opt_method']+'_'+solver_params['observed_faces']
 basefilename = os.path.join(solver_params['results_folder'], name)
 
@@ -534,46 +534,91 @@ misfit_norm = cp.Parameter(nonneg=True)
 misfit_norm.value = 1/np.linalg.norm(y_vec_tr*y_mask_tr,2)**2
 
 
-# ALGORITHM BORN, variant 1
-# provides 26% error
-if solver_params["variant"] == 0:
-    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,Svar1) - y_vec_tr, y_mask_tr)) \
-          + tv_norm*tv_reg
-    Constraints = [Svar1<=1, Svar1[is_dof_near_boundary]==0]
+if solver_params['norm_p'] == 1:
+    # ALGORITHM BORN, variant 1
+    # provides 26% error
+    if solver_params["variant"] == 0:
+        Cost2 = misfit_norm*cp.norm(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,Svar1) - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+        Constraints = [Svar1<=1, Svar1[is_dof_near_boundary]==0]
+
+    # ALGORITHM BORN, variant 2
+    # tikh*TVreg <= 0.1, provides 55% error after 1275 iterations
+    if solver_params["variant"] == 1:
+        Cost2 = misfit_norm*cp.norm(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+        # cp.sum here is really problematic, as there is no guarantee there may be negative components
+        Constraints = [Svar1<=1, 
+                       cp.sum(Svar1)>=200, 
+                       Svar1[is_dof_near_boundary]==0,
+                       cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))==0]
+
+    # ALGORITHM BORN, variant 3
+    # provides 97% error after 7875 iterations
+    if solver_params["variant"] == 2:
+        Cost2 = misfit_norm*cp.norm(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + cp.norm(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) \
+              + tv_norm*tv_reg
+              # + norm_bound*cp.sum(Svar1[is_dof_near_boundary])
+        Constraints = [Svar1<=1, 
+                       # tv_norm*tv_reg <= 0.01,  
+                       Svar1[is_dof_near_boundary]==0,
+                       cp.sum(Svar1)>=200]
+
+    # ALGORITHM BORN, variant 4
+    # provides 99% error after small amount of iterations
+    if solver_params["variant"] == 3:
+        Cost2 = misfit_norm*cp.norm(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+        Constraints = [Svar1<=1, 
+                       cp.sum(Svar1)>=200, 
+                       cp.norm(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) <= EmissionEq_tol,
+                       Svar1[is_dof_near_boundary]==0]
 
 
-# ALGORITHM BORN, variant 2
-# cp.sum(Svar1)>=200 - such regularisation is really needed, otherwise we get much worse results
-if solver_params["variant"] == 1:
-    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
-          + tv_norm*tv_reg
-    Constraints = [Svar1<=1, 
-                   cp.sum(Svar1)>=200, 
-                   Svar1[is_dof_near_boundary]==0,
-                   cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))==0]    
+if solver_params['norm_p'] == 2:
+    # ALGORITHM BORN, variant 1
+    # provides 26% error
+    if solver_params["variant"] == 0:
+        Cost2 = misfit_norm*cp.sum_squares(cp.multiply(mF_tr@cp.multiply(Phi_x_var0,Svar1) - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+        Constraints = [Svar1<=1, Svar1[is_dof_near_boundary]==0]
 
-# ALGORITHM BORN, variant 3
-# provides 97% error after 7875 iterations
-if solver_params["variant"] == 2:
-    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
-          + cp.sum_squares(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) \
-          + tv_norm*tv_reg
-    Constraints = [Svar1<=1, 
-                   # tv_norm*tv_reg <= 0.01, 
-                   cp.sum(Svar1)>=200, 
-                   Svar1[is_dof_near_boundary]==0]
+    # ALGORITHM BORN, variant 2
+    # tikh*TVreg <= 0.1, provides 55% error after 1275 iterations
+    if solver_params["variant"] == 1:
+        Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+              # + norm_bound*cp.sum(Svar1[is_dof_near_boundary])
+        # cp.sum_squares(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))
+        Constraints = [Svar1<=1, 
+                       cp.sum(Svar1)>=200, 
+                       Svar1[is_dof_near_boundary]==0,
+                       cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1)))==0]
 
+    # ALGORITHM BORN, variant 3
+    # provides 97% error after 7875 iterations
+    if solver_params["variant"] == 2:
+        Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + cp.sum_squares(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) \
+              + tv_norm*tv_reg
+              # + norm_bound*cp.sum(Svar1[is_dof_near_boundary])
+        Constraints = [Svar1<=1, 
+                       # tv_norm*tv_reg <= 0.01,  
+                       Svar1[is_dof_near_boundary]==0,
+                       cp.sum(Svar1)>=200]
 
-# ALGORITHM BORN, variant 4
-# provides 99% error after small amount of iterations
-if solver_params["variant"] == 3:
-    Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
-          + tv_norm*tv_reg
-    Constraints = [Svar1<=1, 
-                   # tv_norm*tv_reg <= 0.01, 
-                   cp.sum(Svar1)>=200, 
-                   cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) <= EmissionEq_tol,
-                   Svar1[is_dof_near_boundary]==0]
+    # ALGORITHM BORN, variant 4
+    # provides 99% error after small amount of iterations
+    if solver_params["variant"] == 3:
+        Cost2 = misfit_norm*cp.sum_squares(cp.multiply(Phi_m_var[is_dof_observable] - y_vec_tr, y_mask_tr)) \
+              + tv_norm*tv_reg
+        Constraints = [Svar1<=1, 
+                       # tv_norm*tv_reg <= 0.01, 
+                       cp.sum(Svar1)>=200, 
+                       cp.sum(S_emit@Phi_m_var-mM@(cp.multiply(Phi_x_var0,Svar1))) <= EmissionEq_tol,
+                       Svar1[is_dof_near_boundary]==0]
+
 
 prob_step2 = cp.Problem(cp.Minimize(Cost2), Constraints)
 if solver_params["opt_method"] == cp.OSQP:
