@@ -78,73 +78,35 @@ solver_params_default = {
 
 
 updates = [
-    {"name": "born", "opt_method": "SCS", "variant": 0},
-    {"name": "born", "opt_method": "SCS", "variant": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 2},
-    {"name": "born", "opt_method": "SCS", "variant": 3},
+    {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "norm_p": 1},
+    {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "norm_p": 1}
 
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3},
+    # {"name": "born", "opt_method": "ECOS", "variant": 0},
+    # {"name": "born", "opt_method": "ECOS", "variant": 1},
+    # {"name": "born", "opt_method": "ECOS", "variant": 2},
+    # {"name": "born", "opt_method": "ECOS", "variant": 3}
+    
+    # {"name": "born", "opt_method": "SCS", "variant": 0},
+    # {"name": "born", "opt_method": "SCS", "variant": 1},
+    # {"name": "born", "opt_method": "SCS", "variant": 2},
+    # {"name": "born", "opt_method": "SCS", "variant": 3},
 
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
+    # {"name": "hybrid", "opt_method": "SCS", "variant": 0},
+    # {"name": "hybrid", "opt_method": "SCS", "variant": 1},
+    # {"name": "hybrid", "opt_method": "SCS", "variant": 2},
+    # {"name": "hybrid", "opt_method": "SCS", "variant": 3},
 
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
-    
-    {"name": "born", "opt_method": "SCS", "variant": 0, "norm_p": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 1, "norm_p": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 2, "norm_p": 1},
-    {"name": "born", "opt_method": "SCS", "variant": 3, "norm_p": 1},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
 
-    {"name": "hybrid", "opt_method": "SCS", "variant": 0, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 1, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 2, "norm_p": 1},
-    {"name": "hybrid", "opt_method": "SCS", "variant": 3, "norm_p": 1}
-    
-    
-    # {"name": "born", "opt_method": "SCS", "variant": 3, "norm_p": 1}
-    
-    # {"name": "born", "variant": 0},
-    # {"name": "born", "variant": 1},
-    # {"name": "born", "variant": 2},
-    # {"name": "born", "variant": 3}
-
-    # {"name": "born", "variant": 2}
-    
-    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.01},
-    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 0.1},
-    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 10},
-    # {"name": "hybrid", "variant": 1, "lmd1": 10, "lmd2": 100}
-
-    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 0.01},
-    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 0.1},
-    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 10},
-    # {"name": "hybrid", "variant": 1, "lmd1": 100, "lmd2": 100}
-
-    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 0.01},
-    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 0.1},
-    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 10},
-    # {"name": "hybrid", "variant": 1, "lmd1": 0.1, "lmd2": 100}
-    
-    # {"name": "hybrid", "variant": 1, "lmd1": 10},
-    # {"name": "hybrid", "variant": 1, "lmd1": 100}
-    
-#     {"name": "hybrid", "variant": 0, "mask": 0},
-#     {"name": "hybrid", "variant": 1, "mask": 0},
-#     {"name": "hybrid", "variant": 2, "mask": 0},
-#     {"name": "hybrid", "variant": 3, "mask": 0},
-    
-#     {"name": "born", "variant": 0, "mask": 0},
-#     {"name": "born", "variant": 1, "mask": 0},
-#     {"name": "born", "variant": 2, "mask": 0},
-#     {"name": "born", "variant": 3, "mask": 0}
+    # {"name": "hybrid", "opt_method": "MOSEK", "variant": 0, "norm_p": 1},
+    # {"name": "hybrid", "opt_method": "MOSEK", "variant": 1, "norm_p": 1},
+    # {"name": "hybrid", "opt_method": "MOSEK", "variant": 2, "norm_p": 1},
+    # {"name": "hybrid", "opt_method": "MOSEK", "variant": 3, "norm_p": 1},
 ]
 
 procs = []
