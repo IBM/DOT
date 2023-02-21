@@ -172,5 +172,9 @@ def l2_adj_metric(chi1, chi2, Q):
     chi_temp[chi_temp<0.5] = 0
     chi_n2.vector()[:] = chi_temp
 
-    recon_error = np.sqrt(fem.assemble((chi_n1-chi_n2)**2*fem.dx)/fem.assemble((chi_n2)**2*fem.dx))
+    chi_n2_norm2 = fem.assemble((chi_n2)**2*fem.dx)
+    if chi_n2_norm2 > 0:
+        recon_error = np.sqrt(fem.assemble((chi_n1-chi_n2)**2*fem.dx)/fem.assemble((chi_n2)**2*fem.dx))
+    else:
+        recon_error = 1000
     return recon_error
