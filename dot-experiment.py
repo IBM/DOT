@@ -250,7 +250,8 @@ path = folder + problem['measurements_top_file']
 
 obs_data = np.loadtxt(path)
 obs_data = sps.medfilt(obs_data, kernel_size=15)
-obs_data_top = obs_data[100:-100, 120:-95]
+# obs_data_top = obs_data[100:-100, 120:-95] # for 3mm
+obs_data_top = obs_data[50:-50, 60:-60]    # for 6mm
 
 obs_data_top_interp = interpolate_observations(obs_data_top)
 

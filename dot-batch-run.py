@@ -17,8 +17,9 @@ problem = {
 
     "rb_x": 1.3,  # cm
     "rb_y": 1.3,  # cm
-    "rb_z": 1.4,  # cm
-
+    # "rb_z": 1.4,  # cm
+    "rb_z": 1.7,  # cm
+    
     # phantom support
     "phantom_lb_x": 0.25,
     "phantom_lb_y": 0.25,
@@ -31,7 +32,8 @@ problem = {
     # observations
     "data_folder": os.path.expanduser('~')+'/Library/CloudStorage/Box-Box/UCD_laser_source_videos/All_Phantom_Data/ASCIIs',
     "source_file": '/NewASCIIsSource/RBsource',
-    "measurements_top_file": '/medFilt_RED3mmTop7uM',
+    # "measurements_top_file": '/medFilt_RED3mmTop7uM',
+    "measurements_top_file": '/medFilt_RED6mmTop7uM',
     "measurements_side_file": '/RB3mmSide7uM'
 }
 
@@ -40,7 +42,7 @@ solver_params_default = {
     "results_folder": "results",
 
     # observed faces, either "top" or "top_and_sides"
-    "observed_faces": "top_and_sides",
+    "observed_faces": "top",
     
     # number of elements
     "Nel_x": 22,
@@ -78,10 +80,12 @@ solver_params_default = {
 
 
 updates = [
-    {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top", "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top", "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top", "norm_p": 1},
-    {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top", "norm_p": 1}
+    {"name": "born", "opt_method": "OSQP", "variant": 0, "observed_faces": "top"}
+
+    # {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top"},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top"},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top"},
+    # {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top"}
 
     # {"name": "born", "opt_method": "ECOS", "variant": 0},
     # {"name": "born", "opt_method": "ECOS", "variant": 1},
