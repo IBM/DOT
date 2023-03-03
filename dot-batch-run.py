@@ -80,12 +80,12 @@ solver_params_default = {
 
 
 updates = [
-    {"name": "born", "opt_method": "OSQP", "variant": 0, "observed_faces": "top"}
+    # {"name": "born", "opt_method": "OSQP", "variant": 0, "observed_faces": "top"}
 
-    # {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top"},
-    # {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top"},
-    # {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top"},
-    # {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top"}
+    {"name": "born", "opt_method": "MOSEK", "variant": 0, "observed_faces": "top"},
+    {"name": "born", "opt_method": "MOSEK", "variant": 1, "observed_faces": "top"},
+    {"name": "born", "opt_method": "MOSEK", "variant": 2, "observed_faces": "top"},
+    {"name": "born", "opt_method": "MOSEK", "variant": 3, "observed_faces": "top"}
 
     # {"name": "born", "opt_method": "ECOS", "variant": 0},
     # {"name": "born", "opt_method": "ECOS", "variant": 1},
